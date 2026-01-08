@@ -67,7 +67,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
         <div class="container">
             <a class="navbar-brand" href="{{ url('/') }}">
-                <i class="bi bi-box-seam-fill me-2"></i>JoyClient
+                <i class="bi bi-box-seam-fill me-2"></i>JoyClothesItem
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -79,11 +79,11 @@
                             <i class="bi bi-collection me-1"></i> Inventory
                         </a>
                     </li>
-                    <li class="nav-item">
+                    <!-- <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('map.index') ? 'active' : '' }}" href="{{ route('map.index') }}">
                             <i class="bi bi-geo-alt me-1"></i> Map
                         </a>
-                    </li>
+                    </li> -->
                 </ul>
                 <ul class="navbar-nav ms-auto">
                     @if(Session::has('api_token'))
@@ -102,7 +102,7 @@
                                     <h6 class="dropdown-header">Account</h6>
                                 </li>
                                 <li><a class="dropdown-item" href="{{ route('profile') }}"><i class="bi bi-person me-2"></i>Profile</a></li>
-                                <li><a class="dropdown-item" href="{{ route('password.change') }}"><i class="bi bi-key me-2"></i>Change Password</a></li>
+                                <!-- <li><a class="dropdown-item" href="{{ route('password.change') }}"><i class="bi bi-key me-2"></i>Change Password</a></li> -->
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <form action="{{ route('logout') }}" method="POST">

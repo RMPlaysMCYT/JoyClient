@@ -54,8 +54,8 @@
                          <i class="bi bi-person-lines-fill"></i>
                     </div>
                     <h4 class="card-title">Profile</h4>
-                    <p class="card-text text-muted">Update your personal information.</p>
-                    <a href="{{ route('profile') }}" class="btn btn-outline-info stretched-link">Edit Profile</a>
+                    <p class="card-text text-muted">View your personal information.</p>
+                    <a href="{{ route('profile') }}" class="btn btn-outline-info stretched-link">View Profile</a>
                 </div>
             </div>
         </div>

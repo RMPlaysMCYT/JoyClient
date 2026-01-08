@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ClothesItemController;
 
 /*
@@ -17,14 +18,10 @@ use App\Http\Controllers\ClothesItemController;
 // Route::get('/', function () {
 //     return view('welcome');
 // });
-Route::resource('ClothesItems', ClothesItemController::class);
 
 Route::get('/', function () {
-    return redirect()->route('ClothesItems.index');
+    return redirect()->route('login');
 });
-
-// Auth Routes
-use App\Http\Controllers\AuthController;
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
@@ -33,11 +30,12 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Protected Routes
-Route::middleware(['web'])->group(function () { // Add middleware if you have a custom one checks session
+Route::middleware(['auth.api'])->group(function () { // Add middleware if you have a custom one checks session
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
     
+    Route::resource('ClothesItems', ClothesItemController::class);
     Route::get('/profile', [AuthController::class, 'showProfile'])->name('profile');
     Route::put('/profile', [AuthController::class, 'updateProfile'])->name('profile.update');
     Route::get('/change-password', [AuthController::class, 'showChangePassword'])->name('password.change');

@@ -18,27 +18,24 @@ class ClothesItemController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        $clothesItems = [];
-        try {
-            $response = $this->apiService->get('/ClothesItems');
-            if ($response->successful()) {
-                $clothesItems = $response->json() ?? [];
-            } else {
-                Log::error('Failed to fetch clothes items. Status: ' . $response->status());
-            }
-        } catch (\Exception $e) {
-            Log::error('Exception fetching clothes items: ' . $e->getMessage());
+public function index()
+{
+    $clothesItems = [];
+    try {
+$response = $this->apiService->get('/ClothesItems');
+        if ($response->successful()) {
+            $data = $response->json();
+            // Check if items are nested inside a 'data' key
+            $clothesItems = $data['data'] ?? $data ?? [];
+        } else {
+            Log::error('Failed to fetch clothes items. Status: ' . $response->status());
         }
-
-        // Ensure we always pass an array, preventing the "foreach() argument... null given" error
-        if (!is_array($clothesItems)) {
-            $clothesItems = [];
-        }
-
-        return view('ClothesItems.index', compact('clothesItems'));
+    } catch (\Exception $e) {
+        Log::error('Exception fetching clothes items: ' . $e->getMessage());
     }
+
+    return view('ClothesItems.index', compact('clothesItems'));
+}
 
     /**
      * Show the form for creating a new resource.
@@ -51,22 +48,30 @@ class ClothesItemController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
-    {
-        $response = $this->apiService->post('/ClothesItems', [
-            'sku' => $request->sku,
-            'name' => $request->name,
-            'image' => $request->image,
-            'description' => $request->description,
-            'price' => $request->price
-        ]);
+public function store(Request $request)
+{
+    // 1. Basic validation to ensure data is clean before sending
+    $validated = $request->validate([
+        'sku' => 'required|string',
+        'name' => 'required|string',
+        'price' => 'required|numeric',
+        'image' => 'required|url',
+        'description' => 'nullable|string',
+    ]);
 
-        if ($response->successful()) {
-            return redirect()->route('ClothesItems.index')->with('success', 'Item created successfully!');
-        }
+    $response = $this->apiService->post('/ClothesItems', $validated);
 
-        return back()->withInput()->with('error', 'Failed to create item.');
+    if ($response->successful()) {
+        return redirect()->route('ClothesItems.index')->with('success', 'Item created successfully!');
     }
+
+    // 2. Capture the actual error from the API response
+    $errorMessage = $response->json()['message'] ?? 'Failed to create item.';
+    
+    return back()
+        ->withInput()
+        ->with('error', 'API Error: ' . $errorMessage);
+}
 
     /**
      * Display the specified resource.

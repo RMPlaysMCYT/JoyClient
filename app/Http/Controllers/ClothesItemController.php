@@ -2,20 +2,41 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ClothesItem;
+use App\Services\ApiService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class ClothesItemController extends Controller
 {
+    protected $apiService;
+
+    public function __construct(ApiService $apiService)
+    {
+        $this->apiService = $apiService;
+    }
+
     /**
      * Display a listing of the resource.
      */
-    private $apiUrl = 'http://127.0.0.1:8000/api/ClothesItems';
     public function index()
     {
-        $response = Http::get($this->apiUrl);
-        $clothesItems = $response->json();
+        $clothesItems = [];
+        try {
+            $response = $this->apiService->get('/ClothesItems');
+            if ($response->successful()) {
+                $clothesItems = $response->json() ?? [];
+            } else {
+                Log::error('Failed to fetch clothes items. Status: ' . $response->status());
+            }
+        } catch (\Exception $e) {
+            Log::error('Exception fetching clothes items: ' . $e->getMessage());
+        }
+
+        // Ensure we always pass an array, preventing the "foreach() argument... null given" error
+        if (!is_array($clothesItems)) {
+            $clothesItems = [];
+        }
+
         return view('ClothesItems.index', compact('clothesItems'));
     }
 
@@ -32,14 +53,19 @@ class ClothesItemController extends Controller
      */
     public function store(Request $request)
     {
-        Http::post($this->apiUrl, [
+        $response = $this->apiService->post('/ClothesItems', [
             'sku' => $request->sku,
             'name' => $request->name,
             'image' => $request->image,
             'description' => $request->description,
             'price' => $request->price
         ]);
-        return redirect()->route('ClothesItems.index');
+
+        if ($response->successful()) {
+            return redirect()->route('ClothesItems.index')->with('success', 'Item created successfully!');
+        }
+
+        return back()->withInput()->with('error', 'Failed to create item.');
     }
 
     /**
@@ -47,8 +73,20 @@ class ClothesItemController extends Controller
      */
     public function show(string $id)
     {
-        $response = Http::get("{$this->apiUrl}/{$id}");
-        $clothesItem = $response->json();
+        $clothesItem = null;
+        try {
+            $response = $this->apiService->get("/ClothesItems/{$id}");
+            if ($response->successful()) {
+                $clothesItem = $response->json();
+            }
+        } catch (\Exception $e) {
+            Log::error('Exception fetching item ' . $id . ': ' . $e->getMessage());
+        }
+
+        if (!$clothesItem) {
+            return redirect()->route('ClothesItems.index')->with('error', 'Item not found or could not be loaded.');
+        }
+
         return view('ClothesItems.show', compact('clothesItem'));
     }
 
@@ -57,8 +95,20 @@ class ClothesItemController extends Controller
      */
     public function edit(string $id)
     {
-        $response = Http::get("{$this->apiUrl}/{$id}");
-        $clothesItem = $response->json();
+        $clothesItem = null;
+        try {
+            $response = $this->apiService->get("/ClothesItems/{$id}");
+            if ($response->successful()) {
+                $clothesItem = $response->json();
+            }
+        } catch (\Exception $e) {
+            Log::error('Exception fetching item for edit ' . $id . ': ' . $e->getMessage());
+        }
+
+        if (!$clothesItem) {
+            return redirect()->route('ClothesItems.index')->with('error', 'Item not found or could not be loaded.');
+        }
+
         return view('ClothesItems.edit', compact('clothesItem'));
     }
 
@@ -67,14 +117,19 @@ class ClothesItemController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        Http::put("{$this->apiUrl}/{$id}", [
+        $response = $this->apiService->put("/ClothesItems/{$id}", [
             'sku' => $request->sku,
             'image' => $request->image,
             'name' => $request->name,
             'description' => $request->description,
             'price' => $request->price
         ]);
-        return redirect()->route('ClothesItems.index');
+
+        if ($response->successful()) {
+             return redirect()->route('ClothesItems.index')->with('success', 'Item updated successfully!');
+        }
+
+        return back()->withInput()->with('error', 'Failed to update item.');
     }
 
     /**
@@ -82,7 +137,12 @@ class ClothesItemController extends Controller
      */
     public function destroy(string $id)
     {
-        Http::delete("{$this->apiUrl}/{$id}");
-        return redirect()->route('ClothesItems.index');
+        $response = $this->apiService->delete("/ClothesItems/{$id}");
+
+        if ($response->successful()) {
+            return redirect()->route('ClothesItems.index')->with('success', 'Item deleted successfully!');
+        }
+
+        return redirect()->route('ClothesItems.index')->with('error', 'Failed to delete item.');
     }
 }
